@@ -10,7 +10,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.ref || 'refs/heads/master' }}
+          ref: ${{ github.head_ref }}
           submodules: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,10 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
-          ref: ${{ github.ref || 'refs/heads/master' }}
+          ref: ${{ github.ref }}
           submodules: true
+
+      - uses: actions/configure-pages@v5
 
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v1
@@ -51,9 +53,26 @@ jobs:
       - name: Build site
         run: bundle exec rake
 
-      - name: Deploy to Github Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/master'
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3.0.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build
+          path: ./build
+
+  deploy:
+    name: Deploy to Pages
+    needs: build-static-pages
+    if: ${{ github.ref == 'refs/heads/main' }}
+
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    environment:
+      name: Github Pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
