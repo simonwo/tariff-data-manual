@@ -61,7 +61,7 @@ jobs:
   deploy:
     name: Deploy to Pages
     needs: build-static-pages
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/master' }}
 
     permissions:
       pages: write      # to deploy to Pages
